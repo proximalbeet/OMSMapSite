@@ -1,10 +1,88 @@
+/* ── Wrapper card ───────────────────────────────────────────────────────── */
+.map-plugin-wrapper {
+    border: 1px solid #dde3ec;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    background: #fff;
+    font-family: inherit;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.map-plugin-header {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid #dde3ec;
+    background: #f9fafb;
+}
+
+.map-plugin-title {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.3px;
+}
+
+.map-plugin-description {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.6;
+    max-width: 680px;
+}
+
+/* ── Map ────────────────────────────────────────────────────────────────── */
+#interactive-map {
+    width: 100%;
+    height: 560px;
+}
+
+/* ── Bubble markers ─────────────────────────────────────────────────────── */
+.map-bubble {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.85);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    color: #fff;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.map-bubble:hover {
+    transform: scale(1.12);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.55);
+}
+
+/* ── Popup ──────────────────────────────────────────────────────────────── */
+.popup {
+    text-align: center;
+    min-width: 120px;
+}
+
 .popup strong {
-    font-size: 16px;
+    font-size: 15px;
     display: block;
     margin-bottom: 4px;
+    color: #1a1a2e;
 }
 
 .popup span {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.popup .popup-count {
+    display: inline-block;
+    margin-top: 6px;
+    background: #2563eb;
+    color: #fff;
+    border-radius: 20px;
+    padding: 2px 12px;
     font-size: 14px;
-    color: #444;
+    font-weight: 700;
 }

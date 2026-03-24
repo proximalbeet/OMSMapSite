@@ -9,7 +9,18 @@
 add_shortcode('interactive_map', 'interactive_map_shortcode');
 
 function interactive_map_shortcode() {
-    return '<div id="interactive-map" style="width: 100%; height: 600px;"></div>';
+    return '
+    <div class="map-plugin-wrapper">
+        <div class="map-plugin-header">
+            <h2 class="map-plugin-title">OMS Patients By Country</h2>
+            <p class="map-plugin-description">
+                The map below represents the global reach of OMS patients in our community.
+                Each bubble shows the number of patients from that country.
+                Click any bubble for details.
+            </p>
+        </div>
+        <div id="interactive-map"></div>
+    </div>';
 }
 
 // ── Enqueue assets + pass sheet data to JS ───────────────────────────────────
