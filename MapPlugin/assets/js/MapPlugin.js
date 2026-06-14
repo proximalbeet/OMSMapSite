@@ -3,6 +3,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const mapElement = document.getElementById('interactive-map');
     if (!mapElement) return;
 
+    const features    = (MapPluginData && MapPluginData.features)    ? MapPluginData.features    : [];
+    const specialists = (MapPluginData && MapPluginData.specialists)  ? MapPluginData.specialists  : [];
+    const hasSpecialists = specialists.length > 0;
+
+    // ── Inject toggle buttons into header ────────────────────────────────────
+
+    const header = document.querySelector('.map-plugin-header');
+    if (header && hasSpecialists) {
+        const toggle = document.createElement('div');
+        toggle.className = 'map-toggle';
+        toggle.innerHTML =
+            '<button class="map-toggle-btn active" data-view="patients">Patients</button>' +
+            '<button class="map-toggle-btn"        data-view="both">Both</button>' +
+            '<button class="map-toggle-btn"        data-view="specialists">Specialists</button>';
+        header.appendChild(toggle);
+    }
+
+    // ── Map init ─────────────────────────────────────────────────────────────
+
     const map = L.map('interactive-map', { zoomControl: true }).setView([20, 0], 2);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -10,51 +29,108 @@ document.addEventListener('DOMContentLoaded', function () {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 
-    const features = (MapPluginData && MapPluginData.features) ? MapPluginData.features : [];
-    if (features.length === 0) return;
+    // ── Patient layer ─────────────────────────────────────────────────────────
 
-    const geojson = {
-        type: 'FeatureCollection',
-        features: features.map(function (f) {
-            return {
-                type: 'Feature',
-                properties: { name: f.name, count: f.count },
-                geometry: { type: 'Point', coordinates: [parseFloat(f.lng), parseFloat(f.lat)] }
-            };
-        })
-    };
-
-    // Scale bubble size logarithmically so large values don't dwarf small ones
     function bubbleSize(count) {
         return Math.max(28, Math.min(64, Math.log(count + 1) * 10));
     }
 
-    L.geoJSON(geojson, {
-        pointToLayer: function (feature, latlng) {
-            const count = feature.properties.count;
-            const size  = bubbleSize(count);
-            const fontSize = size < 36 ? 10 : size < 48 ? 12 : 14;
+    const patientLayer = L.layerGroup();
 
-            return L.marker(latlng, {
-                icon: L.divIcon({
-                    className: '',
-                    html: `<div class="map-bubble" style="width:${size}px;height:${size}px;font-size:${fontSize}px;">${count}</div>`,
-                    iconSize: [size, size],
-                    iconAnchor: [size / 2, size / 2]
-                })
-            });
-        },
-        onEachFeature: function (feature, layer) {
-            const name  = feature.properties.name;
-            const count = feature.properties.count;
-            layer.bindPopup(`
-                <div class="popup">
-                    <strong>${name}</strong>
-                    <span>Patients</span>
-                    <div class="popup-count">${count}</div>
-                </div>
-            `);
+    if (features.length > 0) {
+        const geojson = {
+            type: 'FeatureCollection',
+            features: features.map(function (f) {
+                return {
+                    type: 'Feature',
+                    properties: { name: f.name, count: f.count },
+                    geometry: { type: 'Point', coordinates: [parseFloat(f.lng), parseFloat(f.lat)] }
+                };
+            })
+        };
+
+        L.geoJSON(geojson, {
+            pointToLayer: function (feature, latlng) {
+                const count    = feature.properties.count;
+                const size     = bubbleSize(count);
+                const fontSize = size < 36 ? 10 : size < 48 ? 12 : 14;
+                return L.marker(latlng, {
+                    icon: L.divIcon({
+                        className: '',
+                        html: `<div class="map-bubble" style="width:${size}px;height:${size}px;font-size:${fontSize}px;">${count}</div>`,
+                        iconSize: [size, size],
+                        iconAnchor: [size / 2, size / 2]
+                    })
+                });
+            },
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup(`
+                    <div class="popup">
+                        <strong>${feature.properties.name}</strong>
+                        <span>Patients</span>
+                        <div class="popup-count">${feature.properties.count}</div>
+                    </div>
+                `);
+            }
+        }).addTo(patientLayer);
+    }
+
+    patientLayer.addTo(map);
+
+    // ── Specialist layer ──────────────────────────────────────────────────────
+
+    const specialistLayer = L.layerGroup();
+
+    specialists.forEach(function (s) {
+        const lat = parseFloat(s.lat);
+        const lng = parseFloat(s.lng);
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        const marker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: '',
+                html: '<div class="map-specialist-marker">H</div>',
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+            })
+        });
+
+        marker.bindPopup(`
+            <div class="popup popup-specialist">
+                <strong>${s.institution}</strong>
+                <span class="popup-specialist-name">${s.specialist}</span>
+                <div class="popup-address">${s.address}</div>
+                <div class="popup-phone">${s.phone}</div>
+            </div>
+        `);
+
+        marker.addTo(specialistLayer);
+    });
+
+    // ── Toggle logic ──────────────────────────────────────────────────────────
+
+    function setView(view) {
+        document.querySelectorAll('.map-toggle-btn').forEach(function (btn) {
+            btn.classList.toggle('active', btn.dataset.view === view);
+        });
+
+        if (view === 'patients' || view === 'both') {
+            map.addLayer(patientLayer);
+        } else {
+            map.removeLayer(patientLayer);
         }
-    }).addTo(map);
+
+        if (view === 'specialists' || view === 'both') {
+            map.addLayer(specialistLayer);
+        } else {
+            map.removeLayer(specialistLayer);
+        }
+    }
+
+    document.querySelectorAll('.map-toggle-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            setView(btn.dataset.view);
+        });
+    });
 
 });
