@@ -14,13 +14,14 @@ function interactive_map_shortcode() {
         <div class="map-plugin-header">
             <h2 class="map-plugin-title">OMS Patients By Country</h2>
             <p class="map-plugin-description">
-                The map below represents the global reach of OMS patients in our community.
-                Each bubble shows the number of patients from that country.
-                Click any bubble for details.
+                This map shows the global reach of the OMS community. Orange bubbles represent patients by country — the larger the bubble, the more patients in that region.
+                Green markers indicate OMS specialists and hospitals. Use the <strong>Patients</strong>, <strong>Both</strong>, and <strong>Specialists</strong> buttons to switch between views.
+                Click any marker for details.
             </p>
         </div>
         <div id="interactive-map"></div>
-    </div>';
+    </div>
+    <p class="map-plugin-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a></p>';
 }
 
 // ── Enqueue assets + pass sheet data to JS ───────────────────────────────────
@@ -79,13 +80,14 @@ function map_plugin_get_sheet_data() {
         if (count($row) < 4) continue;
         $data = array_combine($header, array_map('trim', $row));
 
-        $lat = isset($data['lat']) ? floatval($data['lat']) : 0;
-        $lng = isset($data['lng']) ? floatval($data['lng']) : 0;
+        $lat  = isset($data['lat'])  ? floatval($data['lat'])  : 0;
+        $lng  = isset($data['lng'])  ? floatval($data['lng'])  : 0;
+        $name = isset($data['name']) ? trim($data['name'])     : '';
         if ($lat === 0.0 && $lng === 0.0) continue;
 
         $features[] = array(
-            'name'  => isset($data['name'])  ? $data['name']          : '',
-            'count' => isset($data['count']) ? intval($data['count'])  : 0,
+            'name'  => $name,
+            'count' => isset($data['count']) ? intval($data['count']) : 0,
             'lat'   => $lat,
             'lng'   => $lng,
         );

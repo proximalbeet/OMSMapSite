@@ -7,26 +7,37 @@ document.addEventListener('DOMContentLoaded', function () {
     const specialists = (MapPluginData && MapPluginData.specialists)  ? MapPluginData.specialists  : [];
     const hasSpecialists = specialists.length > 0;
 
-    // ── Inject toggle buttons into header ────────────────────────────────────
+    // ── Inject stats + toggle into header ────────────────────────────────────
 
     const header = document.querySelector('.map-plugin-header');
-    if (header && hasSpecialists) {
-        const toggle = document.createElement('div');
-        toggle.className = 'map-toggle';
-        toggle.innerHTML =
-            '<button class="map-toggle-btn active" data-view="patients">Patients</button>' +
-            '<button class="map-toggle-btn"        data-view="both">Both</button>' +
-            '<button class="map-toggle-btn"        data-view="specialists">Specialists</button>';
-        header.appendChild(toggle);
+    if (header) {
+        const totalPatients = features.reduce(function (sum, f) { return sum + parseInt(f.count, 10); }, 0);
+
+        const stats = document.createElement('div');
+        stats.className = 'map-header-stats';
+        stats.innerHTML =
+            '<div class="map-stat"><span class="map-stat-number">' + totalPatients.toLocaleString() + '</span><span class="map-stat-label">Total Patients</span></div>' +
+            (hasSpecialists ? '<div class="map-stat"><span class="map-stat-number">' + specialists.length + '</span><span class="map-stat-label">Specialists</span></div>' : '');
+        header.appendChild(stats);
+
+        if (hasSpecialists) {
+            const toggle = document.createElement('div');
+            toggle.className = 'map-toggle';
+            toggle.innerHTML =
+                '<button class="map-toggle-btn active" data-view="patients">Patients</button>' +
+                '<button class="map-toggle-btn"        data-view="both">Both</button>' +
+                '<button class="map-toggle-btn"        data-view="specialists">Specialists</button>';
+            header.appendChild(toggle);
+        }
     }
 
     // ── Map init ─────────────────────────────────────────────────────────────
 
     const map = L.map('interactive-map', { zoomControl: true }).setView([20, 0], 2);
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(map);
 
     // ── Patient layer ─────────────────────────────────────────────────────────
@@ -55,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const size     = bubbleSize(count);
                 const fontSize = size < 36 ? 10 : size < 48 ? 12 : 14;
                 return L.marker(latlng, {
+                    zIndexOffset: -1000,
                     icon: L.divIcon({
                         className: '',
                         html: `<div class="map-bubble" style="width:${size}px;height:${size}px;font-size:${fontSize}px;">${count}</div>`,
@@ -87,9 +99,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isNaN(lat) || isNaN(lng)) return;
 
         const marker = L.marker([lat, lng], {
+            zIndexOffset: 1000,
             icon: L.divIcon({
                 className: '',
-                html: '<div class="map-specialist-marker">H</div>',
+                html: '<div class="map-specialist-marker">+</div>',
                 iconSize: [36, 36],
                 iconAnchor: [18, 18]
             })
