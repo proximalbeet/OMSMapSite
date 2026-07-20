@@ -108,12 +108,33 @@ document.addEventListener('DOMContentLoaded', function () {
             })
         });
 
+        const institutionHtml = s.url
+            ? `<a class="popup-institution-link" href="${s.url}" target="_blank" rel="noopener noreferrer">${s.institution}</a>`
+            : `<strong>${s.institution}</strong>`;
+
+        const tags = [
+            s.type       ? `<span class="popup-tag popup-tag-type">${s.type}</span>` : '',
+            s.omas_cases ? `<span class="popup-tag popup-tag-cases">${s.omas_cases} cases</span>` : '',
+            s.registry === 'YES' ? `<span class="popup-tag popup-tag-registry">Registry &#10003;</span>` : ''
+        ].filter(Boolean).join('');
+
+        const pictureHtml = s.picture
+            ? `<img class="popup-specialist-photo" src="${s.picture}" alt="${s.specialist}" />`
+            : '';
+
+        const videoHtml = s.video
+            ? `<a class="popup-video-link" href="${s.video}" target="_blank" rel="noopener noreferrer">&#9654; Watch Video</a>`
+            : '';
+
         marker.bindPopup(`
             <div class="popup popup-specialist">
-                <strong>${s.institution}</strong>
+                ${pictureHtml}
+                ${institutionHtml}
                 <span class="popup-specialist-name">${s.specialist}</span>
+                ${tags ? `<div class="popup-tags">${tags}</div>` : ''}
                 <div class="popup-address">${s.address}</div>
-                <div class="popup-phone">${s.phone}</div>
+                <div class="popup-phone"><a href="tel:${s.phone}">${s.phone}</a></div>
+                ${videoHtml}
             </div>
         `);
 

@@ -13,15 +13,13 @@ function interactive_map_shortcode() {
     <div class="map-plugin-wrapper">
         <div class="map-plugin-header">
             <h2 class="map-plugin-title">OMS Patients By Country</h2>
-            <p class="map-plugin-description">
-                This map shows the global reach of the OMS community. Orange bubbles represent patients by country — the larger the bubble, the more patients in that region.
-                Green markers indicate OMS specialists and hospitals. Use the <strong>Patients</strong>, <strong>Both</strong>, and <strong>Specialists</strong> buttons to switch between views.
-                Click any marker for details.
-            </p>
         </div>
         <div id="interactive-map"></div>
     </div>
-    <p class="map-plugin-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a></p>';
+    <p class="map-plugin-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a></p>
+    <div class="map-plugin-disclaimer">
+        The information presented on this map is based primarily on patient utilization patterns and reflects locations where larger numbers of patients have received care. It may also include institutions where physicians are recognized by their peers as experienced medical professionals in the treatment of OMAS. Inclusion does not imply any recommendation, endorsement, or assessment of the quality, effectiveness, or suitability of any institution, physician, or healthcare provider. Users are encouraged to conduct their own research and consult qualified professionals when making healthcare decisions.
+    </div>';
 }
 
 // ── Enqueue assets + pass sheet data to JS ───────────────────────────────────
@@ -38,7 +36,7 @@ function map_plugin_assets_enqueue() {
         'MapPlugin-js',
         plugin_dir_url(__FILE__) . 'assets/js/MapPlugin.js',
         array('leaflet-js'),
-        '1.2',
+        '1.3',
         true
     );
 
@@ -57,7 +55,6 @@ function map_plugin_get_sheet_data() {
     $sheet_url = get_option('map_plugin_sheet_url', '');
     if (empty($sheet_url)) return array();
 
-    // Extract sheet ID from full URL or use as-is
     if (preg_match('/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/', $sheet_url, $matches)) {
         $sheet_id = $matches[1];
     } else {
@@ -119,24 +116,54 @@ function map_plugin_get_specialists_data() {
         return array();
     }
 
-    $body   = wp_remote_retrieve_body($response);
-    $rows   = array_map('str_getcsv', explode("\n", trim($body)));
-    $header = array_map('strtolower', array_map('trim', array_shift($rows)));
+    $body = wp_remote_retrieve_body($response);
+
+    // fgetcsv handles multi-line quoted fields (e.g. addresses with newlines)
+    $tmp = tmpfile();
+    fwrite($tmp, $body);
+    rewind($tmp);
+
+    $rows = array();
+    while (($row = fgetcsv($tmp)) !== false) {
+        $rows[] = $row;
+    }
+    fclose($tmp);
+
+    if (empty($rows)) return array();
+
+    // Normalize headers: lowercase + spaces → underscores ("Phone number" → "phone_number")
+    $header = array_map(function ($h) {
+        return strtolower(preg_replace('/\s+/', '_', trim($h)));
+    }, array_shift($rows));
+
+    $header_count = count($header);
 
     $specialists = array();
     foreach ($rows as $row) {
-        if (count($row) !== count($header)) continue;
+        // Pad short rows; trim overlong ones — then combine
+        $row = array_pad(array_slice($row, 0, $header_count), $header_count, '');
         $data = array_combine($header, array_map('trim', $row));
 
         $lat = isset($data['lat']) ? floatval($data['lat']) : 0;
         $lng = isset($data['lng']) ? floatval($data['lng']) : 0;
         if ($lat === 0.0 && $lng === 0.0) continue;
 
+        // "phone_number" (new sheet) or "phone" (legacy column name)
+        $phone = isset($data['phone_number']) && $data['phone_number'] !== ''
+            ? $data['phone_number']
+            : (isset($data['phone']) ? $data['phone'] : '');
+
         $specialists[] = array(
-            'institution' => isset($data['institution']) ? $data['institution'] : '',
-            'specialist'  => isset($data['specialist'])  ? $data['specialist']  : '',
-            'address'     => isset($data['address'])     ? $data['address']     : '',
-            'phone'       => isset($data['phone'])       ? $data['phone']       : '',
+            'institution' => isset($data['institution']) ? $data['institution']            : '',
+            'specialist'  => isset($data['specialist'])  ? $data['specialist']             : '',
+            'address'     => isset($data['address'])     ? $data['address']                : '',
+            'phone'       => $phone,
+            'type'        => isset($data['type'])        ? $data['type']                   : '',
+            'omas_cases'  => isset($data['omas_cases'])  ? intval($data['omas_cases'])     : 0,
+            'registry'    => isset($data['registry'])    ? $data['registry']               : '',
+            'picture'     => isset($data['picture'])     ? esc_url(trim($data['picture'])) : '',
+            'video'       => isset($data['video'])       ? esc_url(trim($data['video']))   : '',
+            'url'         => isset($data['url'])         ? esc_url(trim($data['url']))     : '',
             'lat'         => $lat,
             'lng'         => $lng,
         );
@@ -172,7 +199,6 @@ function map_plugin_register_settings() {
 }
 
 function map_plugin_settings_page() {
-    // Clear cache when form is saved
     if (isset($_GET['settings-updated'])) {
         delete_transient('map_plugin_sheet_data');
         delete_transient('map_plugin_specialists_data');
@@ -210,7 +236,7 @@ function map_plugin_settings_page() {
                             class="regular-text"
                             placeholder="https://docs.google.com/spreadsheets/d/..."
                         />
-                        <p class="description">Row 1 headers: <code>institution, specialist, address, phone, lat, lng</code></p>
+                        <p class="description">Row 1 headers: <code>Institution, Specialist, Address, Phone number, Type, OMAS Cases, Registry, Picture, Video, lat, lng</code> (optional: <code>url</code> for website link)</p>
                     </td>
                 </tr>
             </table>

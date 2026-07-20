@@ -23,14 +23,6 @@
     letter-spacing: -0.4px;
 }
 
-.map-plugin-description {
-    margin: 0;
-    font-size: 14px;
-    color: #6b7280;
-    line-height: 1.65;
-    max-width: 680px;
-}
-
 /* ── Map ────────────────────────────────────────────────────────────────── */
 #interactive-map {
     width: 100%;
@@ -39,6 +31,18 @@
 
 #interactive-map .leaflet-control-attribution {
     display: none;
+}
+
+/* ── Disclaimer ─────────────────────────────────────────────────────────── */
+.map-plugin-disclaimer {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: #f9f7f5;
+    border-left: 3px solid #d1c7bc;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.7;
 }
 
 /* ── Attribution (below card) ───────────────────────────────────────────── */
@@ -215,12 +219,70 @@
     margin-bottom: 2px;
 }
 
+.popup-institution-link {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0d9488;
+    text-decoration: none;
+    line-height: 1.3;
+    margin-bottom: 2px;
+}
+
+.popup-institution-link:hover {
+    color: #0f766e;
+    text-decoration: underline;
+}
+
+.popup-specialist-photo {
+    width: 100%;
+    max-height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    display: block;
+}
+
 .popup-specialist-name {
     display: block;
     font-size: 13px;
     color: #0d9488;
     font-weight: 600;
     margin-bottom: 10px;
+}
+
+.popup-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 7px 0 10px;
+}
+
+.popup-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.popup-tag-type {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.popup-tag-cases {
+    background: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+.popup-tag-registry {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
 }
 
 .popup-address {
@@ -254,4 +316,29 @@
     left: 0;
     top: 0;
     font-size: 11px;
+}
+
+.popup-phone a {
+    color: #4b5563;
+    text-decoration: none;
+}
+
+.popup-phone a:hover {
+    color: #0d9488;
+    text-decoration: underline;
+}
+
+.popup-video-link {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #dc2626;
+    text-decoration: none;
+    letter-spacing: 0.01em;
+}
+
+.popup-video-link:hover {
+    color: #b91c1c;
+    text-decoration: underline;
 }

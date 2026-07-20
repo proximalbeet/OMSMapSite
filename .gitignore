@@ -1,0 +1,14 @@
+# JetBrains IDEs
+.idea/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Spreadsheet data files
+MapPlugin/assets/spreadsheets/
+
+# Node (if ever needed)
+node_modules/
