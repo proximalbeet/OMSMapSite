@@ -1,6 +1,6 @@
 # OMS Map Plugin
 
-A WordPress plugin that displays an interactive world map of the OMS (Opsoclonus Myoclonus Syndrome) community. Shows two data layers — patients by country and OMS specialist hospitals — with a live 3-way toggle between views. Data is pulled from public Google Sheets and cached automatically.
+A WordPress plugin that displays an interactive world map of the OMS (Opsoclonus Myoclonus Syndrome) community. Shows two data layers — patients by country and OMS hospital hospitals — with a live 3-way toggle between views. Data is pulled from public Google Sheets and cached automatically.
 
 ---
 
@@ -8,13 +8,13 @@ A WordPress plugin that displays an interactive world map of the OMS (Opsoclonus
 
 - Interactive Leaflet.js map embedded via the `[interactive_map]` shortcode
 - **Patients layer** — orange bubble markers sized logarithmically by patient count per country
-- **Specialists layer** — green `+` markers for individual OMS specialist hospitals
-- **3-way toggle** — switch between Patients, Specialists, or Both layers simultaneously
-- **Header stats** — total patient count and specialist count displayed above the map
-- **Rich specialist popups** — institution name (website link), specialist name, type badge, OMAS case count, registry status, address, tap-to-call phone, and video link
+- **Hospitals layer** — green `+` markers for individual OMS hospital hospitals
+- **3-way toggle** — switch between Patients, Hospitals, or Both layers simultaneously
+- **Header stats** — total patient count and hospital count displayed above the map
+- **Rich hospital popups** — institution name (website link), hospital name, type badge, OMAS case count, registry status, address, tap-to-call phone, and video link
 - **Patient popups** — country name and patient count
 - Data cached for 1 hour; cache clears automatically when settings are saved
-- Toggle and specialist layer are hidden if no specialists sheet is configured — no visual change for unconfigured installs
+- Toggle and hospital layer are hidden if no hospitals sheet is configured — no visual change for unconfigured installs
 - Medical disclaimer and map attribution displayed below the card
 
 ---
@@ -51,11 +51,11 @@ Row 1 headers (case-insensitive):
 - Patients with no known location should use `lat: -40, lng: -160` (South Pacific placeholder — keeps them on the map without implying a false location)
 - Use `patients_map.csv` (in `assets/spreadsheets/`) as your import template
 
-### Specialists Sheet
+### Hospitals Sheet
 
 Row 1 headers (case-insensitive, spaces allowed):
 
-| Institution | Specialist | Address | Phone number | Type | OMAS Cases | Registry | Picture | Video | lat | lng |
+| Institution | Hospital | Address | Phone number | Type | OMAS Cases | Registry | Picture | Video | lat | lng |
 |-------------|------------|---------|--------------|------|------------|----------|---------|-------|-----|-----|
 | Boston Children's Hospital | Mark Gorman | 300 Longwood Ave, Boston, MA 02115 | (617) 919-5323 | Pediatric | 105 | YES | | https://youtube.com/... | 42.3372 | -71.1064 |
 
@@ -64,7 +64,7 @@ Row 1 headers (case-insensitive, spaces allowed):
 | Column | Required | Description |
 |--------|----------|-------------|
 | Institution | Yes | Hospital or clinic name |
-| Specialist | Yes | Doctor's full name |
+| Hospital | Yes | Doctor's full name |
 | Address | Yes | Full mailing address (multi-line addresses are supported) |
 | Phone number | Yes | Displayed as a tap-to-call link |
 | Type | No | e.g. "Pediatric" — shown as a badge in the popup |
@@ -78,9 +78,9 @@ Row 1 headers (case-insensitive, spaces allowed):
 
 > **About the Picture column:** Spreadsheets cannot store image files — only links to them. To show a doctor's photo, upload the image somewhere publicly accessible (e.g. WordPress Media Library via WP Admin → Media → Add New), then paste the resulting URL into the Picture column.
 
-> **Coordinates:** Must be plain decimal numbers (e.g. `42.3372`, `-71.1064`). Google Sheets sometimes exports coordinates with degree symbols or Unicode minus signs — use `specialists_map.csv` as your import template since it has pre-cleaned values.
+> **Coordinates:** Must be plain decimal numbers (e.g. `42.3372`, `-71.1064`). Google Sheets sometimes exports coordinates with degree symbols or Unicode minus signs — use `hospitals_map.csv` as your import template since it has pre-cleaned values.
 
-> Use `specialists_map.csv` (in `assets/spreadsheets/`) as your import template.
+> Use `hospitals_map.csv` (in `assets/spreadsheets/`) as your import template.
 
 ---
 
@@ -89,7 +89,7 @@ Row 1 headers (case-insensitive, spaces allowed):
 In **WP Admin → Settings → Map Plugin**:
 
 - **Patients Google Sheet URL** — paste the full Google Sheets URL for patient data
-- **Specialists Google Sheet URL** — paste the full Google Sheets URL for specialist data
+- **Hospitals Google Sheet URL** — paste the full Google Sheets URL for hospital data
 
 Click **Save & Refresh Map Data** to clear the cache and fetch fresh data. Do this any time you update sheet content, even if the URL hasn't changed.
 

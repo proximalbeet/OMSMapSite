@@ -16,7 +16,7 @@ function interactive_map_shortcode() {
         </div>
         <div id="interactive-map"></div>
     </div>
-    <p class="map-plugin-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a></p>
+    <p class="map-plugin-attribution">Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors</p>
     <div class="map-plugin-disclaimer">
         The information presented on this map is based primarily on patient utilization patterns and reflects locations where larger numbers of patients have received care. It may also include institutions where physicians are recognized by their peers as experienced medical professionals in the treatment of OMAS. Inclusion does not imply any recommendation, endorsement, or assessment of the quality, effectiveness, or suitability of any institution, physician, or healthcare provider. Users are encouraged to conduct their own research and consult qualified professionals when making healthcare decisions.
     </div>';
@@ -42,7 +42,7 @@ function map_plugin_assets_enqueue() {
 
     wp_localize_script('MapPlugin-js', 'MapPluginData', array(
         'features'    => map_plugin_get_sheet_data(),
-        'specialists' => map_plugin_get_specialists_data()
+        'hospitals' => map_plugin_get_hospitals_data()
     ));
 }
 
@@ -94,13 +94,13 @@ function map_plugin_get_sheet_data() {
     return $features;
 }
 
-// ── Fetch + parse specialists Google Sheet CSV ───────────────────────────────
+// ── Fetch + parse hospitals Google Sheet CSV ───────────────────────────────
 
-function map_plugin_get_specialists_data() {
-    $cached = get_transient('map_plugin_specialists_data');
+function map_plugin_get_hospitals_data() {
+    $cached = get_transient('map_plugin_hospitals_data');
     if ($cached !== false) return $cached;
 
-    $sheet_url = get_option('map_plugin_specialists_sheet_url', '');
+    $sheet_url = get_option('map_plugin_hospitals_sheet_url', '');
     if (empty($sheet_url)) return array();
 
     if (preg_match('/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/', $sheet_url, $matches)) {
@@ -138,7 +138,7 @@ function map_plugin_get_specialists_data() {
 
     $header_count = count($header);
 
-    $specialists = array();
+    $hospitals = array();
     foreach ($rows as $row) {
         // Pad short rows; trim overlong ones — then combine
         $row = array_pad(array_slice($row, 0, $header_count), $header_count, '');
@@ -153,9 +153,9 @@ function map_plugin_get_specialists_data() {
             ? $data['phone_number']
             : (isset($data['phone']) ? $data['phone'] : '');
 
-        $specialists[] = array(
+        $hospitals[] = array(
             'institution' => isset($data['institution']) ? $data['institution']            : '',
-            'specialist'  => isset($data['specialist'])  ? $data['specialist']             : '',
+            'hospital'  => isset($data['hospital'])  ? $data['hospital']             : '',
             'address'     => isset($data['address'])     ? $data['address']                : '',
             'phone'       => $phone,
             'type'        => isset($data['type'])        ? $data['type']                   : '',
@@ -169,8 +169,8 @@ function map_plugin_get_specialists_data() {
         );
     }
 
-    set_transient('map_plugin_specialists_data', $specialists, HOUR_IN_SECONDS);
-    return $specialists;
+    set_transient('map_plugin_hospitals_data', $hospitals, HOUR_IN_SECONDS);
+    return $hospitals;
 }
 
 // ── Admin settings page ───────────────────────────────────────────────────────
@@ -193,7 +193,7 @@ function map_plugin_register_settings() {
     register_setting('map_plugin_options', 'map_plugin_sheet_url', array(
         'sanitize_callback' => 'sanitize_text_field',
     ));
-    register_setting('map_plugin_options', 'map_plugin_specialists_sheet_url', array(
+    register_setting('map_plugin_options', 'map_plugin_hospitals_sheet_url', array(
         'sanitize_callback' => 'sanitize_text_field',
     ));
 }
@@ -201,7 +201,7 @@ function map_plugin_register_settings() {
 function map_plugin_settings_page() {
     if (isset($_GET['settings-updated'])) {
         delete_transient('map_plugin_sheet_data');
-        delete_transient('map_plugin_specialists_data');
+        delete_transient('map_plugin_hospitals_data');
     }
     ?>
     <div class="wrap">
@@ -226,17 +226,17 @@ function map_plugin_settings_page() {
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="map_plugin_specialists_sheet_url">Specialists Google Sheet URL</label></th>
+                    <th scope="row"><label for="map_plugin_hospitals_sheet_url">Hospitals Google Sheet URL</label></th>
                     <td>
                         <input
                             type="text"
-                            id="map_plugin_specialists_sheet_url"
-                            name="map_plugin_specialists_sheet_url"
-                            value="<?php echo esc_attr(get_option('map_plugin_specialists_sheet_url', '')); ?>"
+                            id="map_plugin_hospitals_sheet_url"
+                            name="map_plugin_hospitals_sheet_url"
+                            value="<?php echo esc_attr(get_option('map_plugin_hospitals_sheet_url', '')); ?>"
                             class="regular-text"
                             placeholder="https://docs.google.com/spreadsheets/d/..."
                         />
-                        <p class="description">Row 1 headers: <code>Institution, Specialist, Address, Phone number, Type, OMAS Cases, Registry, Picture, Video, lat, lng</code> (optional: <code>url</code> for website link)</p>
+                        <p class="description">Row 1 headers: <code>Institution, Hospital, Address, Phone number, Type, OMAS Cases, Registry, Picture, Video, lat, lng</code> (optional: <code>url</code> for website link)</p>
                     </td>
                 </tr>
             </table>

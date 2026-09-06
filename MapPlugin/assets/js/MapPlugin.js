@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!mapElement) return;
 
     const features    = (MapPluginData && MapPluginData.features)    ? MapPluginData.features    : [];
-    const specialists = (MapPluginData && MapPluginData.specialists)  ? MapPluginData.specialists  : [];
-    const hasSpecialists = specialists.length > 0;
+    const hospitals = (MapPluginData && MapPluginData.hospitals)  ? MapPluginData.hospitals  : [];
+    const hasHospitals = hospitals.length > 0;
 
     // ── Inject stats + toggle into header ────────────────────────────────────
 
@@ -17,16 +17,16 @@ document.addEventListener('DOMContentLoaded', function () {
         stats.className = 'map-header-stats';
         stats.innerHTML =
             '<div class="map-stat"><span class="map-stat-number">' + totalPatients.toLocaleString() + '</span><span class="map-stat-label">Total Patients</span></div>' +
-            (hasSpecialists ? '<div class="map-stat"><span class="map-stat-number">' + specialists.length + '</span><span class="map-stat-label">Specialists</span></div>' : '');
+            (hasHospitals ? '<div class="map-stat"><span class="map-stat-number">' + hospitals.length + '</span><span class="map-stat-label">Hospitals</span></div>' : '');
         header.appendChild(stats);
 
-        if (hasSpecialists) {
+        if (hasHospitals) {
             const toggle = document.createElement('div');
             toggle.className = 'map-toggle';
             toggle.innerHTML =
                 '<button class="map-toggle-btn active" data-view="patients">Patients</button>' +
                 '<button class="map-toggle-btn"        data-view="both">Both</button>' +
-                '<button class="map-toggle-btn"        data-view="specialists">Specialists</button>';
+                '<button class="map-toggle-btn"        data-view="hospitals">Hospitals</button>';
             header.appendChild(toggle);
         }
     }
@@ -35,9 +35,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const map = L.map('interactive-map', { zoomControl: true }).setView([20, 0], 2);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    // CARTO now requires an API key for their basemap tiles (even free tier);
+    // without one they overlay an "API KEY REQUIRED" watermark. Switched to
+    // OpenStreetMap tiles below to avoid needing an API key at all.
+    // L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    //     maxZoom: 19,
+    //     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    // }).addTo(map);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
     // ── Patient layer ─────────────────────────────────────────────────────────
@@ -89,22 +97,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
     patientLayer.addTo(map);
 
-    // ── Specialist layer ──────────────────────────────────────────────────────
+    // ── Hospital layer ──────────────────────────────────────────────────────
 
-    const specialistLayer = L.layerGroup();
+    const hospitalLayer = L.layerGroup();
 
-    specialists.forEach(function (s) {
+    hospitals.forEach(function (s) {
         const lat = parseFloat(s.lat);
         const lng = parseFloat(s.lng);
         if (isNaN(lat) || isNaN(lng)) return;
+
+        const cases = parseInt(s.omas_cases, 10) || 0;
+        const sizeClass = cases > 100 ? 'map-hospital-marker--size-4'
+            : cases >= 50 ? 'map-hospital-marker--size-3'
+            : cases >= 20 ? 'map-hospital-marker--size-2'
+            : 'map-hospital-marker--size-1';
+
+        
+        const iconSizes = { 'map-hospital-marker--size-1': 28, 'map-hospital-marker--size-2': 36, 'map-hospital-marker--size-3': 46, 'map-hospital-marker--size-4': 58 };
+        const px = iconSizes[sizeClass];
 
         const marker = L.marker([lat, lng], {
             zIndexOffset: 1000,
             icon: L.divIcon({
                 className: '',
-                html: '<div class="map-specialist-marker">+</div>',
-                iconSize: [36, 36],
-                iconAnchor: [18, 18]
+                html: `<div class="map-hospital-marker ${sizeClass}">+</div>`,
+                iconSize: [px, px],
+                iconAnchor: [px / 2, px / 2]
             })
         });
 
@@ -119,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ].filter(Boolean).join('');
 
         const pictureHtml = s.picture
-            ? `<img class="popup-specialist-photo" src="${s.picture}" alt="${s.specialist}" />`
+            ? `<img class="popup-hospital-photo" src="${s.picture}" alt="${s.hospital}" />`
             : '';
 
         const videoHtml = s.video
@@ -127,10 +145,10 @@ document.addEventListener('DOMContentLoaded', function () {
             : '';
 
         marker.bindPopup(`
-            <div class="popup popup-specialist">
+            <div class="popup popup-hospital">
                 ${pictureHtml}
                 ${institutionHtml}
-                <span class="popup-specialist-name">${s.specialist}</span>
+                <span class="popup-hospital-name">${s.hospital}</span>
                 ${tags ? `<div class="popup-tags">${tags}</div>` : ''}
                 <div class="popup-address">${s.address}</div>
                 <div class="popup-phone"><a href="tel:${s.phone}">${s.phone}</a></div>
@@ -138,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `);
 
-        marker.addTo(specialistLayer);
+        marker.addTo(hospitalLayer);
     });
 
     // ── Toggle logic ──────────────────────────────────────────────────────────
@@ -154,10 +172,10 @@ document.addEventListener('DOMContentLoaded', function () {
             map.removeLayer(patientLayer);
         }
 
-        if (view === 'specialists' || view === 'both') {
-            map.addLayer(specialistLayer);
+        if (view === 'hospitals' || view === 'both') {
+            map.addLayer(hospitalLayer);
         } else {
-            map.removeLayer(specialistLayer);
+            map.removeLayer(hospitalLayer);
         }
     }
 
