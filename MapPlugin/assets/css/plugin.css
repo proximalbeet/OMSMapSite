@@ -173,10 +173,10 @@
 }
 
 /* Size tiers by patients served: <20, 20-50, 50-100, >100 */
-.map-hospital-marker--size-1 { width: 28px; height: 28px; font-size: 14px; }
-.map-hospital-marker--size-2 { width: 36px; height: 36px; font-size: 20px; }
-.map-hospital-marker--size-3 { width: 46px; height: 46px; font-size: 24px; }
-.map-hospital-marker--size-4 { width: 58px; height: 58px; font-size: 28px; }
+.map-hospital-marker--size-1 { width: 25px; height: 25px; font-size: 14px; }
+.map-hospital-marker--size-2 { width: 36px; height: 36px; font-size: 18px; }
+.map-hospital-marker--size-3 { width: 48px; height: 48px; font-size: 24px; }
+.map-hospital-marker--size-4 { width: 64px; height: 64px; font-size: 30px; }
 
 /* ── Popup shared ────────────────────────────────────────────────────────── */
 .popup {
